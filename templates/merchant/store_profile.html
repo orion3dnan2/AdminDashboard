@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}بيانات المتجر - التاجر - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-success">
+                    <i class="fas fa-store me-2"></i>بيانات المتجر
+                </h1>
+                <a href="{{ url_for('merchant.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-edit me-2 text-success"></i>تحديث بيانات المتجر
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label fw-semibold">
+                                    <i class="fas fa-store me-1 text-primary"></i>اسم المتجر
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="name" 
+                                       name="name" value="{{ store.name or '' }}" required>
+                                <div class="invalid-feedback">
+                                    يرجى إدخال اسم المتجر
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="category" class="form-label fw-semibold">
+                                    <i class="fas fa-tags me-1 text-info"></i>فئة المتجر
+                                </label>
+                                <select class="form-select form-select-lg" id="category" name="category" required>
+                                    <option value="">اختر فئة المتجر</option>
+                                    <option value="إلكترونيات" {{ 'selected' if store.category == 'إلكترونيات' }}>إلكترونيات</option>
+                                    <option value="ملابس" {{ 'selected' if store.category == 'ملابس' }}>ملابس</option>
+                                    <option value="طعام ومشروبات" {{ 'selected' if store.category == 'طعام ومشروبات' }}>طعام ومشروبات</option>
+                                    <option value="صحة وجمال" {{ 'selected' if store.category == 'صحة وجمال' }}>صحة وجمال</option>
+                                    <option value="منزل وحديقة" {{ 'selected' if store.category == 'منزل وحديقة' }}>منزل وحديقة</option>
+                                    <option value="رياضة" {{ 'selected' if store.category == 'رياضة' }}>رياضة</option>
+                                    <option value="كتب" {{ 'selected' if store.category == 'كتب' }}>كتب</option>
+                                    <option value="خدمات" {{ 'selected' if store.category == 'خدمات' }}>خدمات</option>
+                                    <option value="أخرى" {{ 'selected' if store.category == 'أخرى' }}>أخرى</option>
+                                </select>
+                                <div class="invalid-feedback">
+                                    يرجى اختيار فئة المتجر
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="description" class="form-label fw-semibold">
+                                    <i class="fas fa-align-right me-1 text-warning"></i>وصف المتجر
+                                </label>
+                                <textarea class="form-control" id="description" name="description" 
+                                          rows="4" placeholder="اكتب وصفاً مختصراً عن متجرك وما يقدمه...">{{ store.description or '' }}</textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-semibold">
+                                    <i class="fas fa-phone me-1 text-success"></i>رقم الهاتف
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" id="phone" 
+                                       name="phone" value="{{ store.phone or '' }}" 
+                                       placeholder="مثال: +249123456789">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="address" class="form-label fw-semibold">
+                                    <i class="fas fa-map-marker-alt me-1 text-danger"></i>العنوان
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="address" 
+                                       name="address" value="{{ store.address or '' }}" 
+                                       placeholder="المدينة، المنطقة، الشارع">
+                            </div>
+
+                            <div class="col-12">
+                                <div class="alert alert-info border-0">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>ملاحظة:</strong> تأكد من دقة المعلومات المدخلة حيث سيتم عرضها للعملاء في التطبيق.
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                        <i class="fas fa-times me-1"></i>إلغاء
+                                    </button>
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="fas fa-save me-2"></i>حفظ التغييرات
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Store Statistics -->
+            {% if store %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>إحصائيات المتجر
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center g-4">
+                        <div class="col-md-3">
+                            <div class="p-3 bg-primary bg-opacity-10 rounded">
+                                <i class="fas fa-box fa-2x text-primary mb-2"></i>
+                                <h4 class="fw-bold text-primary">{{ store.products_count or 0 }}</h4>
+                                <small class="text-muted">منتج</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-info bg-opacity-10 rounded">
+                                <i class="fas fa-cogs fa-2x text-info mb-2"></i>
+                                <h4 class="fw-bold text-info">{{ store.services_count or 0 }}</h4>
+                                <small class="text-muted">خدمة</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-warning bg-opacity-10 rounded">
+                                <i class="fas fa-shopping-cart fa-2x text-warning mb-2"></i>
+                                <h4 class="fw-bold text-warning">{{ store.orders_count or 0 }}</h4>
+                                <small class="text-muted">طلب</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3 bg-success bg-opacity-10 rounded">
+                                <i class="fas fa-star fa-2x text-success mb-2"></i>
+                                <h4 class="fw-bold text-success">{{ store.rating or '0.0' }}</h4>
+                                <small class="text-muted">تقييم</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Form validation
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

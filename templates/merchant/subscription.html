@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}الاشتراك - التاجر - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-success">
+                    <i class="fas fa-credit-card me-2"></i>إدارة الاشتراك
+                </h1>
+                <a href="{{ url_for('merchant.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-1"></i>العودة للوحة التحكم
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Current Subscription -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>حالة الاشتراك الحالي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if subscription %}
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">نوع الاشتراك</h6>
+                            <p class="fw-semibold">{{ subscription.plan_name or 'الخطة الأساسية' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">الحالة</h6>
+                            {% if subscription.is_active %}
+                            <span class="badge bg-success fs-6">نشط</span>
+                            {% else %}
+                            <span class="badge bg-danger fs-6">غير نشط</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">تاريخ البداية</h6>
+                            <p class="fw-semibold">{{ subscription.start_date or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">تاريخ الانتهاء</h6>
+                            <p class="fw-semibold">{{ subscription.end_date or 'غير محدد' }}</p>
+                        </div>
+                        {% if subscription.days_remaining is defined %}
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">الأيام المتبقية</h6>
+                            <p class="fw-semibold">
+                                {% if subscription.days_remaining > 0 %}
+                                    {{ subscription.days_remaining }} يوم
+                                {% else %}
+                                    انتهى الاشتراك
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                        {% if subscription.price %}
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">سعر الاشتراك</h6>
+                            <p class="fw-semibold text-success">{{ subscription.price }} ج.س</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Subscription Features -->
+                    {% if subscription.features %}
+                    <div class="mt-4">
+                        <h6 class="fw-semibold mb-3">
+                            <i class="fas fa-check-circle me-1 text-success"></i>مميزات الاشتراك
+                        </h6>
+                        <div class="row g-2">
+                            {% for feature in subscription.features %}
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check text-success me-2"></i>
+                                    <span class="small">{{ feature }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Usage Statistics -->
+                    {% if subscription.usage %}
+                    <div class="mt-4">
+                        <h6 class="fw-semibold mb-3">
+                            <i class="fas fa-chart-bar me-1 text-info"></i>إحصائيات الاستخدام
+                        </h6>
+                        <div class="row g-3">
+                            {% if subscription.usage.products_limit %}
+                            <div class="col-sm-6">
+                                <div class="progress-item">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>المنتجات</span>
+                                        <span>{{ subscription.usage.products_used or 0 }} / {{ subscription.usage.products_limit }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ ((subscription.usage.products_used or 0) / subscription.usage.products_limit * 100) | round }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if subscription.usage.services_limit %}
+                            <div class="col-sm-6">
+                                <div class="progress-item">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>الخدمات</span>
+                                        <span>{{ subscription.usage.services_used or 0 }} / {{ subscription.usage.services_limit }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-info" style="width: {{ ((subscription.usage.services_used or 0) / subscription.usage.services_limit * 100) | round }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <h5 class="text-muted">لا يوجد اشتراك نشط</h5>
+                        <p class="text-muted">يجب الاشتراك في إحدى الخطط لبدء استخدام الخدمات</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts & Actions -->
+        <div class="col-lg-4">
+            <!-- Subscription Alert -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-bell me-2 text-warning"></i>تنبيهات
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if subscription and subscription.is_active %}
+                        {% if subscription.days_remaining is defined and subscription.days_remaining < 7 %}
+                        <div class="alert alert-warning border-0 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>تنبيه:</strong> ينتهي اشتراكك خلال {{ subscription.days_remaining }} أيام. يرجى التجديد قريباً.
+                        </div>
+                        {% elif subscription.days_remaining is defined and subscription.days_remaining <= 0 %}
+                        <div class="alert alert-danger border-0 mb-0">
+                            <i class="fas fa-times-circle me-2"></i>
+                            <strong>انتبه:</strong> انتهى اشتراكك. يرجى التجديد لاستكمال الخدمات.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success border-0 mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            اشتراكك نشط ويعمل بشكل طبيعي.
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="alert alert-info border-0 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        لا يوجد اشتراك نشط. اشترك الآن للاستفادة من جميع المميزات.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-bolt me-2 text-primary"></i>إجراءات سريعة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if not subscription or not subscription.is_active %}
+                        <button class="btn btn-success" onclick="alert('سيتم توجيهك لصفحة الدفع قريباً')">
+                            <i class="fas fa-plus me-1"></i>اشتراك جديد
+                        </button>
+                        {% else %}
+                        <button class="btn btn-primary" onclick="alert('سيتم توجيهك لصفحة التجديد قريباً')">
+                            <i class="fas fa-sync me-1"></i>تجديد الاشتراك
+                        </button>
+                        {% endif %}
+                        <button class="btn btn-outline-info" onclick="alert('سيتم عرض الخطط المتاحة قريباً')">
+                            <i class="fas fa-list me-1"></i>عرض الخطط
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="alert('ستتوفر فواتير PDF قريباً')">
+                            <i class="fas fa-file-pdf me-1"></i>تحميل الفاتورة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription History -->
+    {% if history %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-history me-2 text-secondary"></i>سجل الاشتراكات
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 fw-semibold">الفترة</th>
+                                    <th class="border-0 fw-semibold">نوع الخطة</th>
+                                    <th class="border-0 fw-semibold">المبلغ</th>
+                                    <th class="border-0 fw-semibold">الحالة</th>
+                                    <th class="border-0 fw-semibold">تاريخ الدفع</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in history %}
+                                <tr>
+                                    <td>
+                                        <small>{{ record.start_date }} - {{ record.end_date }}</small>
+                                    </td>
+                                    <td class="fw-semibold">{{ record.plan_name or 'خطة أساسية' }}</td>
+                                    <td class="text-success fw-semibold">{{ record.amount }} ج.س</td>
+                                    <td>
+                                        {% if record.status == 'paid' %}
+                                        <span class="badge bg-success">مدفوع</span>
+                                        {% elif record.status == 'pending' %}
+                                        <span class="badge bg-warning">معلق</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">ملغي</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">{{ record.payment_date or 'غير محدد' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check subscription status periodically
+    setInterval(function() {
+        {% if subscription and subscription.days_remaining is defined and subscription.days_remaining <= 3 %}
+            console.log('اشتراكك على وشك الانتهاء!');
+        {% endif %}
+    }, 300000); // Check every 5 minutes
+</script>
+{% endblock %}

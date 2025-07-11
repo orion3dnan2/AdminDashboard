@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}منتجاتي - التاجر - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-primary">
+                    <i class="fas fa-box me-2"></i>منتجاتي
+                </h1>
+                <div class="d-flex gap-2">
+                    <span class="text-muted align-self-center">
+                        <i class="fas fa-list me-1"></i>إجمالي المنتجات: {{ total_products }}
+                    </span>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="fas fa-plus me-1"></i>إضافة منتج جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                {% if product.image_url %}
+                <img src="{{ product.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ product.name }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-3x text-muted"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0 fw-semibold">{{ product.name }}</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button class="dropdown-item" onclick="editProduct({{ product.id }}, '{{ product.name }}', '{{ product.description }}', {{ product.price }}, '{{ product.category }}')">
+                                        <i class="fas fa-edit me-2"></i>تعديل
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ url_for('merchant.delete_product', product_id=product.id) }}" 
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا المنتج؟')">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="card-text text-muted small mb-3">{{ product.description or 'لا يوجد وصف' }}</p>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 text-primary fw-bold mb-0">{{ product.price }} ج.س</span>
+                            {% if product.is_available %}
+                            <span class="badge bg-success">متوفر</span>
+                            {% else %}
+                            <span class="badge bg-danger">غير متوفر</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if product.category %}
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">{{ product.category }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto border-top pt-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>{{ product.created_at or 'غير محدد' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('merchant.products', page=current_page-1) }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == current_page }}">
+                        <a class="page-link" href="{{ url_for('merchant.products', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% elif page_num == 4 and current_page > 5 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% elif page_num == total_pages - 3 and current_page < total_pages - 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('merchant.products', page=current_page+1) }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد منتجات</h4>
+        <p class="text-muted">ابدأ بإضافة منتجك الأول</p>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="fas fa-plus me-1"></i>إضافة منتج جديد
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2 text-primary"></i>إضافة منتج جديد
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('merchant.add_product') }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="productName" class="form-label fw-semibold">اسم المنتج</label>
+                            <input type="text" class="form-control" id="productName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="productPrice" class="form-label fw-semibold">السعر (ج.س)</label>
+                            <input type="number" class="form-control" id="productPrice" name="price" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="productCategory" class="form-label fw-semibold">الفئة</label>
+                            <select class="form-select" id="productCategory" name="category" required>
+                                <option value="">اختر فئة المنتج</option>
+                                <option value="إلكترونيات">إلكترونيات</option>
+                                <option value="ملابس">ملابس</option>
+                                <option value="طعام ومشروبات">طعام ومشروبات</option>
+                                <option value="صحة وجمال">صحة وجمال</option>
+                                <option value="منزل وحديقة">منزل وحديقة</option>
+                                <option value="رياضة">رياضة</option>
+                                <option value="كتب">كتب</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="productDescription" class="form-label fw-semibold">وصف المنتج</label>
+                            <textarea class="form-control" id="productDescription" name="description" rows="3" 
+                                      placeholder="اكتب وصفاً تفصيلياً للمنتج..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>إضافة المنتج
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="editProductModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2 text-warning"></i>تعديل المنتج
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editProductForm" method="POST">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="editProductName" class="form-label fw-semibold">اسم المنتج</label>
+                            <input type="text" class="form-control" id="editProductName" name="name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="editProductPrice" class="form-label fw-semibold">السعر (ج.س)</label>
+                            <input type="number" class="form-control" id="editProductPrice" name="price" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-12">
+                            <label for="editProductCategory" class="form-label fw-semibold">الفئة</label>
+                            <select class="form-select" id="editProductCategory" name="category" required>
+                                <option value="">اختر فئة المنتج</option>
+                                <option value="إلكترونيات">إلكترونيات</option>
+                                <option value="ملابس">ملابس</option>
+                                <option value="طعام ومشروبات">طعام ومشروبات</option>
+                                <option value="صحة وجمال">صحة وجمال</option>
+                                <option value="منزل وحديقة">منزل وحديقة</option>
+                                <option value="رياضة">رياضة</option>
+                                <option value="كتب">كتب</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label for="editProductDescription" class="form-label fw-semibold">وصف المنتج</label>
+                            <textarea class="form-control" id="editProductDescription" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>حفظ التغييرات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function editProduct(id, name, description, price, category) {
+        document.getElementById('editProductName').value = name;
+        document.getElementById('editProductDescription').value = description;
+        document.getElementById('editProductPrice').value = price;
+        document.getElementById('editProductCategory').value = category;
+        document.getElementById('editProductForm').action = '{{ url_for("merchant.edit_product", product_id=0) }}'.replace('0', id);
+        
+        new bootstrap.Modal(document.getElementById('editProductModal')).show();
+    }
+</script>
+{% endblock %}

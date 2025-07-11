@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المستخدمين - المدير - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-primary">
+                    <i class="fas fa-users me-2"></i>إدارة المستخدمين
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-list me-1"></i>إجمالي المستخدمين: {{ total_users }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if users %}
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="border-0 fw-semibold">المعرف</th>
+                            <th class="border-0 fw-semibold">الاسم</th>
+                            <th class="border-0 fw-semibold">البريد الإلكتروني</th>
+                            <th class="border-0 fw-semibold">رقم الهاتف</th>
+                            <th class="border-0 fw-semibold">الحالة</th>
+                            <th class="border-0 fw-semibold">تاريخ التسجيل</th>
+                            <th class="border-0 fw-semibold text-center">الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td class="align-middle">
+                                <span class="badge bg-secondary">#{{ user.id }}</span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2">
+                                        {{ user.name[0] if user.name else 'ج' }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold">{{ user.name or 'غير محدد' }}</div>
+                                        {% if user.user_type %}
+                                        <small class="text-muted">{{ user.user_type }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="align-middle">{{ user.email or 'غير محدد' }}</td>
+                            <td class="align-middle">{{ user.phone or 'غير محدد' }}</td>
+                            <td class="align-middle">
+                                {% if user.is_active %}
+                                <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                <span class="badge bg-danger">معطل</span>
+                                {% endif %}
+                            </td>
+                            <td class="align-middle">
+                                <small class="text-muted">{{ user.created_at or 'غير محدد' }}</small>
+                            </td>
+                            <td class="align-middle text-center">
+                                <div class="btn-group btn-group-sm">
+                                    <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-warning" 
+                                                title="{{ 'إلغاء التفعيل' if user.is_active else 'تفعيل' }}">
+                                            <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" 
+                                          class="d-inline" onsubmit="return confirm('هل أنت متأكد من حذف هذا المستخدم؟')">
+                                        <button type="submit" class="btn btn-outline-danger" title="حذف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.users', page=current_page-1) }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == current_page }}">
+                        <a class="page-link" href="{{ url_for('admin.users', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% elif page_num == 4 and current_page > 5 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% elif page_num == total_pages - 3 and current_page < total_pages - 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.users', page=current_page+1) }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد بيانات مستخدمين</h4>
+        <p class="text-muted">لم يتم العثور على أي مستخدمين في النظام</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

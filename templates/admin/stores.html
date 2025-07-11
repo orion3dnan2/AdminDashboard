@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة المتاجر - المدير - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-primary">
+                    <i class="fas fa-store me-2"></i>إدارة المتاجر
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-list me-1"></i>إجمالي المتاجر: {{ total_stores }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if stores %}
+    <div class="row g-4">
+        {% for store in stores %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-md bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-semibold">{{ store.name or 'اسم المتجر غير محدد' }}</h5>
+                                <small class="text-muted">معرف: #{{ store.id }}</small>
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <form method="POST" action="{{ url_for('admin.delete_store', store_id=store.id) }}" 
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا المتجر؟')">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash me-2"></i>حذف المتجر
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <p class="text-muted small mb-2">{{ store.description or 'لا يوجد وصف للمتجر' }}</p>
+                    </div>
+
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="fw-bold text-primary">{{ store.products_count or 0 }}</div>
+                                <small class="text-muted">منتج</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border-end">
+                                <div class="fw-bold text-success">{{ store.services_count or 0 }}</div>
+                                <small class="text-muted">خدمة</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold text-warning">{{ store.orders_count or 0 }}</div>
+                            <small class="text-muted">طلب</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {% if store.is_active %}
+                        <span class="badge bg-success">متجر نشط</span>
+                        {% else %}
+                        <span class="badge bg-danger">متجر معطل</span>
+                        {% endif %}
+                        
+                        {% if store.category %}
+                        <span class="badge bg-secondary">{{ store.category }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="border-top pt-3">
+                        <div class="row g-2 small text-muted">
+                            {% if store.owner_name %}
+                            <div class="col-12">
+                                <i class="fas fa-user me-1"></i>{{ store.owner_name }}
+                            </div>
+                            {% endif %}
+                            {% if store.phone %}
+                            <div class="col-12">
+                                <i class="fas fa-phone me-1"></i>{{ store.phone }}
+                            </div>
+                            {% endif %}
+                            {% if store.address %}
+                            <div class="col-12">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ store.address }}
+                            </div>
+                            {% endif %}
+                            {% if store.created_at %}
+                            <div class="col-12">
+                                <i class="fas fa-calendar me-1"></i>{{ store.created_at }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.stores', page=current_page-1) }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == current_page }}">
+                        <a class="page-link" href="{{ url_for('admin.stores', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% elif page_num == 4 and current_page > 5 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% elif page_num == total_pages - 3 and current_page < total_pages - 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.stores', page=current_page+1) }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-store fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد متاجر</h4>
+        <p class="text-muted">لم يتم العثور على أي متاجر في النظام</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

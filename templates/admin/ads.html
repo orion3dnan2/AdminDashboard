@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الإعلانات - المدير - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-primary">
+                    <i class="fas fa-bullhorn me-2"></i>إدارة الإعلانات
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-list me-1"></i>إجمالي الإعلانات: {{ total_ads }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if ads %}
+    <div class="row g-4">
+        {% for ad in ads %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                {% if ad.image_url %}
+                <img src="{{ ad.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ ad.title }}">
+                {% else %}
+                <div class="card-img-top bg-gradient-primary d-flex align-items-center justify-content-center text-white" style="height: 200px;">
+                    <i class="fas fa-bullhorn fa-3x"></i>
+                </div>
+                {% endif %}
+
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title mb-0 fw-semibold">{{ ad.title or 'عنوان الإعلان غير محدد' }}</h5>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <form method="POST" action="{{ url_for('admin.delete_ad', ad_id=ad.id) }}" 
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذا الإعلان؟')">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash me-2"></i>حذف الإعلان
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="card-text text-muted small mb-3">{{ ad.description or 'لا يوجد وصف للإعلان' }}</p>
+
+                    <div class="mb-3">
+                        {% if ad.is_active %}
+                        <span class="badge bg-success">نشط</span>
+                        {% else %}
+                        <span class="badge bg-danger">معطل</span>
+                        {% endif %}
+
+                        {% if ad.ad_type %}
+                        <span class="badge bg-info">{{ ad.ad_type }}</span>
+                        {% endif %}
+
+                        {% if ad.priority %}
+                        <span class="badge bg-warning">أولوية: {{ ad.priority }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if ad.target_audience %}
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-users me-1"></i>الجمهور المستهدف: {{ ad.target_audience }}
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    {% if ad.click_count is defined %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">عدد النقرات</small>
+                            <span class="badge bg-primary">{{ ad.click_count }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if ad.budget %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">الميزانية</small>
+                            <span class="text-success fw-semibold">{{ ad.budget }} ج.س</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto border-top pt-3">
+                        <div class="row g-2 small text-muted">
+                            {% if ad.advertiser_name %}
+                            <div class="col-12">
+                                <i class="fas fa-user me-1"></i>{{ ad.advertiser_name }}
+                            </div>
+                            {% endif %}
+                            <div class="col-6">
+                                <i class="fas fa-tag me-1"></i>معرف: #{{ ad.id }}
+                            </div>
+                            {% if ad.created_at %}
+                            <div class="col-6">
+                                <i class="fas fa-calendar me-1"></i>{{ ad.created_at }}
+                            </div>
+                            {% endif %}
+                            {% if ad.start_date %}
+                            <div class="col-6">
+                                <i class="fas fa-play me-1"></i>{{ ad.start_date }}
+                            </div>
+                            {% endif %}
+                            {% if ad.end_date %}
+                            <div class="col-6">
+                                <i class="fas fa-stop me-1"></i>{{ ad.end_date }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.ads', page=current_page-1) }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == current_page }}">
+                        <a class="page-link" href="{{ url_for('admin.ads', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% elif page_num == 4 and current_page > 5 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% elif page_num == total_pages - 3 and current_page < total_pages - 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.ads', page=current_page+1) }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-bullhorn fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد إعلانات</h4>
+        <p class="text-muted">لم يتم العثور على أي إعلانات في النظام</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

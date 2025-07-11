@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الخدمات - المدير - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-primary">
+                    <i class="fas fa-cogs me-2"></i>إدارة الخدمات
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-list me-1"></i>إجمالي الخدمات: {{ total_services }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if services %}
+    <div class="row g-4">
+        {% for service in services %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-md bg-info rounded-circle d-flex align-items-center justify-content-center text-white me-3">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-semibold">{{ service.name or 'اسم الخدمة غير محدد' }}</h5>
+                                <small class="text-muted">معرف: #{{ service.id }}</small>
+                            </div>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <form method="POST" action="{{ url_for('admin.delete_service', service_id=service.id) }}" 
+                                          onsubmit="return confirm('هل أنت متأكد من حذف هذه الخدمة؟')">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash me-2"></i>حذف الخدمة
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <p class="card-text text-muted small mb-3">{{ service.description or 'لا يوجد وصف للخدمة' }}</p>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 text-success fw-bold mb-0">
+                                {% if service.price %}
+                                    {{ service.price }} ج.س
+                                {% else %}
+                                    السعر حسب الطلب
+                                {% endif %}
+                            </span>
+                            {% if service.is_available %}
+                            <span class="badge bg-success">متوفرة</span>
+                            {% else %}
+                            <span class="badge bg-danger">غير متوفرة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if service.category %}
+                    <div class="mb-3">
+                        <span class="badge bg-secondary">{{ service.category }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if service.duration %}
+                    <div class="mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>مدة التنفيذ: {{ service.duration }}
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    <div class="mt-auto border-top pt-3">
+                        <div class="row g-2 small text-muted">
+                            {% if service.store_name %}
+                            <div class="col-12">
+                                <i class="fas fa-store me-1"></i>{{ service.store_name }}
+                            </div>
+                            {% endif %}
+                            {% if service.provider_name %}
+                            <div class="col-12">
+                                <i class="fas fa-user me-1"></i>{{ service.provider_name }}
+                            </div>
+                            {% endif %}
+                            {% if service.created_at %}
+                            <div class="col-12">
+                                <i class="fas fa-calendar me-1"></i>{{ service.created_at }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if current_page > 1 %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.services', page=current_page-1) }}">السابق</a>
+            </li>
+            {% endif %}
+
+            {% for page_num in range(1, total_pages + 1) %}
+                {% if page_num <= 3 or page_num > total_pages - 3 or (page_num >= current_page - 1 and page_num <= current_page + 1) %}
+                    <li class="page-item {{ 'active' if page_num == current_page }}">
+                        <a class="page-link" href="{{ url_for('admin.services', page=page_num) }}">{{ page_num }}</a>
+                    </li>
+                {% elif page_num == 4 and current_page > 5 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% elif page_num == total_pages - 3 and current_page < total_pages - 4 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.services', page=current_page+1) }}">التالي</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-cogs fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد خدمات</h4>
+        <p class="text-muted">لم يتم العثور على أي خدمات في النظام</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

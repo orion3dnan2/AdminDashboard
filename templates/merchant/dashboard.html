@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}لوحة التحكم - التاجر - بيت السوداني{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 fw-bold text-success">
+                    <i class="fas fa-tachometer-alt me-2"></i>لوحة تحكم التاجر
+                </h1>
+                <div class="text-muted">
+                    <i class="fas fa-store me-1"></i>{{ store.name or 'متجري' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">منتجاتي</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.products_count }}</h2>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-box fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-info text-white border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">خدماتي</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.services_count }}</h2>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-cogs fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-warning text-white border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">الطلبات</h6>
+                            <h2 class="mb-0 fw-bold">{{ stats.orders_count }}</h2>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-shopping-cart fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-success text-white border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="card-title mb-0">حالة الاشتراك</h6>
+                            <h5 class="mb-0 fw-bold">
+                                {% if subscription.is_active %}
+                                نشط
+                                {% else %}
+                                معطل
+                                {% endif %}
+                            </h5>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-credit-card fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store Info & Quick Actions -->
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-store me-2 text-success"></i>معلومات المتجر
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if store %}
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">اسم المتجر</h6>
+                            <p class="fw-semibold">{{ store.name or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">الفئة</h6>
+                            <p class="fw-semibold">{{ store.category or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-12">
+                            <h6 class="text-muted mb-2">الوصف</h6>
+                            <p>{{ store.description or 'لا يوجد وصف للمتجر' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">رقم الهاتف</h6>
+                            <p>{{ store.phone or 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">العنوان</h6>
+                            <p>{{ store.address or 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ url_for('merchant.store_profile') }}" class="btn btn-outline-success">
+                            <i class="fas fa-edit me-1"></i>تحديث بيانات المتجر
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-3"></i>
+                        <h5 class="text-muted">لا يوجد متجر مرتبط</h5>
+                        <p class="text-muted">يجب إنشاء متجر أولاً لبدء البيع</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light border-0">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="fas fa-bolt me-2 text-primary"></i>إجراءات سريعة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{{ url_for('merchant.products') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-box me-2"></i>إدارة المنتجات
+                        </a>
+                        <a href="{{ url_for('merchant.services') }}" class="btn btn-outline-info">
+                            <i class="fas fa-cogs me-2"></i>إدارة الخدمات
+                        </a>
+                        <a href="{{ url_for('merchant.orders') }}" class="btn btn-outline-warning">
+                            <i class="fas fa-shopping-cart me-2"></i>عرض الطلبات
+                        </a>
+                        <a href="{{ url_for('merchant.subscription') }}" class="btn btn-outline-success">
+                            <i class="fas fa-credit-card me-2"></i>إدارة الاشتراك
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Alert -->
+            {% if subscription %}
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header bg-light border-0">
+                    <h6 class="mb-0 fw-semibold">
+                        <i class="fas fa-info-circle me-2 text-info"></i>تنبيه الاشتراك
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% if subscription.is_active %}
+                        {% if subscription.days_remaining is defined and subscription.days_remaining < 7 %}
+                        <div class="alert alert-warning border-0 small mb-0">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            ينتهي اشتراكك خلال {{ subscription.days_remaining }} أيام
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success border-0 small mb-0">
+                            <i class="fas fa-check-circle me-1"></i>
+                            اشتراكك نشط حتى {{ subscription.end_date or 'غير محدد' }}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="alert alert-danger border-0 small mb-0">
+                        <i class="fas fa-times-circle me-1"></i>
+                        اشتراكك غير نشط. يرجى التجديد
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/ar.min.js"></script>
+<script>
+    moment.locale('ar');
+    
+    // Auto-refresh dashboard every 10 minutes
+    setInterval(function() {
+        location.reload();
+    }, 600000);
+</script>
+{% endblock %}
