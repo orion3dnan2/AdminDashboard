@@ -1,0 +1,48 @@
+I want you to **redesign the current admin dashboard UI** of my project "Bayt Al-Sudani" to make it more **modern, professional, and visually elegant**, while keeping the Sudanese cultural identity.
+
+Please apply the following improvements to the HTML and CSS files inside the admin dashboard template:
+
+🔧 1. **Layout & Structure:**
+- Use a clean and modern layout with a proper grid or flexbox system.
+- Add responsive design using CSS media queries or Bootstrap/Tailwind (if available).
+- Place KPI cards in a balanced grid layout with equal spacing.
+- Group related items (statistics, quick actions, recent activity) into distinct visual blocks.
+
+🎨 2. **Visual Design:**
+- Use a consistent color palette inspired by Sudanese identity:
+  - Primary: Dark Green (#006400)
+  - Secondary: Gold (#C8B560)
+  - Background: Light Beige (#FDF6EC)
+- Add subtle shadows and border radius to cards and containers.
+- Replace flat cards with modern, elevated cards with hover effects.
+
+📱 3. **Typography:**
+- Use an elegant Arabic-friendly font like **Tajawal** or **Cairo** (import from Google Fonts).
+- Ensure proper RTL (right-to-left) support.
+- Apply consistent font sizes, line heights, and weight.
+
+🧩 4. **Navigation and Interaction:**
+- Add a fixed top navigation bar with:
+  - App title/logo: "البيت السوداني"
+  - Profile dropdown (with name/avatar)
+  - Notification icon
+- Add a sidebar or bottom navigation for quick access to:
+  - Dashboard, Users, Products, Stores, Services, Jobs, Ads, Settings
+
+⚙️ 5. **User Experience (UX):**
+- Add visual feedback on button hover/click.
+- Show friendly empty states if data is 0 (e.g., "No services yet").
+- Add timestamps in human-readable form ("5 mins ago", "Today").
+
+📈 6. **Optional Enhancements:**
+- Add icon animations (e.g., using Font Awesome + hover scale).
+- If possible, allow theme switching (light/dark).
+- Use reusable CSS classes for cards, buttons, and sections.
+
+💡 Notes:
+- Don't change the business logic or functionality.
+- Focus only on improving the **frontend design and layout**.
+- Keep code modular and clean (separate CSS if needed).
+- All HTML edits are under `templates/admin/` and styles in `static/css/`.
+
+Start by rewriting `dashboard.html` and its linked CSS file as a professional admin dashboard screen based on these instructions.
