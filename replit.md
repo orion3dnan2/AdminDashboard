@@ -8,6 +8,21 @@ BaytAlSudani is a Flask-based web application providing administrative and merch
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes (July 13, 2025)
+
+### Database Integration and Authentication System (July 13, 2025)
+- **PostgreSQL Integration**: Migrated from external API to PostgreSQL database with SQLAlchemy ORM
+- **Authentication System**: Implemented Flask-Login with secure password hashing using Werkzeug
+- **Database Models**: Created comprehensive models (User, Store, Product, Service, Order, Advertisement, Job)
+- **Data Relationships**: Established proper foreign key relationships between all models
+- **Session Management**: Replaced session-based auth with Flask-Login for better security
+- **Admin Dashboard**: Updated all admin routes to work with database instead of external API
+- **Merchant Dashboard**: Implemented merchant-specific data access and management
+- **Sample Data**: Created seed data script with sample merchants, stores, products, and orders
+- **Default Admin**: Automatic creation of default admin user (admin/admin123)
+- **Error Handling**: Comprehensive error handling with Arabic flash messages
+- **Database Migration**: Seamless migration from API-based to database-driven architecture
+
 ## Recent Changes (July 11, 2025)
 
 ### Sudanese Cultural Design Implementation

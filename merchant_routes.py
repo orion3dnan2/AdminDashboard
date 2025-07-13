@@ -1,6 +1,9 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from api_client import api_client
-from auth import merchant_required, is_merchant_logged_in, get_current_merchant
+from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask_login import login_user, logout_user, current_user
+from models import db, User, Store, Product, Service, Order
+from auth import merchant_required, is_merchant_logged_in, authenticate_user
+from sqlalchemy import func, desc
+from decimal import Decimal
 import logging
 
 merchant_bp = Blueprint('merchant', __name__)
@@ -12,24 +15,22 @@ def login():
         return redirect(url_for('merchant.dashboard'))
     
     if request.method == 'POST':
-        email = request.form.get('email')
+        email_or_username = request.form.get('email')
         password = request.form.get('password')
         
-        if not email or not password:
-            flash('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'error')
+        if not email_or_username or not password:
+            flash('يرجى إدخال البريد الإلكتروني أو اسم المستخدم وكلمة المرور', 'error')
             return render_template('merchant/login.html')
         
-        # Authenticate with API
-        result = api_client.login_merchant(email, password)
+        # Authenticate with database
+        user = authenticate_user(email_or_username, password, 'merchant')
         
-        if 'error' in result:
-            flash(result['error'], 'error')
+        if not user:
+            flash('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error')
             return render_template('merchant/login.html')
         
-        # Store merchant info in session
-        session['merchant_id'] = result.get('merchant_id')
-        session['merchant_email'] = result.get('email', email)
-        session['merchant_store_id'] = result.get('store_id')
+        # Login user using Flask-Login
+        login_user(user, remember=True)
         
         flash('تم تسجيل الدخول بنجاح', 'success')
         return redirect(url_for('merchant.dashboard'))
@@ -40,7 +41,7 @@ def login():
 @merchant_required
 def logout():
     """Merchant logout"""
-    session.clear()
+    logout_user()
     flash('تم تسجيل الخروج بنجاح', 'success')
     return redirect(url_for('merchant.login'))
 
@@ -48,98 +49,116 @@ def logout():
 @merchant_required
 def dashboard():
     """Merchant dashboard"""
-    merchant = get_current_merchant()
-    
-    # Get store info
-    store_data = {}
-    if merchant['store_id']:
-        store_result = api_client.get_store(merchant['store_id'])
-        if 'error' not in store_result:
-            store_data = store_result
-    
-    # Get products count
-    products_result = api_client.get_products(store_id=merchant['store_id'], limit=1)
-    products_count = products_result.get('total', 0) if 'error' not in products_result else 0
-    
-    # Get services count
-    services_result = api_client.get_services(store_id=merchant['store_id'], limit=1)
-    services_count = services_result.get('total', 0) if 'error' not in services_result else 0
-    
-    # Get orders count
-    orders_result = api_client.get_orders(store_id=merchant['store_id'], limit=1)
-    orders_count = orders_result.get('total', 0) if 'error' not in orders_result else 0
-    
-    # Get subscription info
-    subscription_result = api_client.get_subscription(merchant['id'])
-    subscription = subscription_result if 'error' not in subscription_result else {}
-    
-    stats = {
-        'products_count': products_count,
-        'services_count': services_count,
-        'orders_count': orders_count
-    }
-    
-    return render_template('merchant/dashboard.html', 
-                         store=store_data, 
-                         stats=stats,
-                         subscription=subscription)
+    try:
+        merchant = current_user
+        
+        # Get or create store for merchant
+        store = Store.query.filter_by(merchant_id=merchant.id).first()
+        if not store:
+            # Create default store for merchant
+            store = Store(
+                name=f"متجر {merchant.username}",
+                description="متجر جديد",
+                merchant_id=merchant.id
+            )
+            db.session.add(store)
+            db.session.commit()
+        
+        # Get statistics
+        stats = {
+            'products_count': Product.query.filter_by(merchant_id=merchant.id).count(),
+            'services_count': Service.query.filter_by(store_id=store.id).count(),
+            'orders_count': Order.query.filter_by(merchant_id=merchant.id).count(),
+            'pending_orders': Order.query.filter_by(merchant_id=merchant.id, status='pending').count(),
+            'total_revenue': db.session.query(func.sum(Order.total_price)).filter_by(
+                merchant_id=merchant.id, status='delivered'
+            ).scalar() or 0
+        }
+        
+        # Get recent orders
+        recent_orders = Order.query.filter_by(merchant_id=merchant.id).order_by(
+            desc(Order.created_at)
+        ).limit(5).all()
+        
+        # Get recent products
+        recent_products = Product.query.filter_by(merchant_id=merchant.id).order_by(
+            desc(Product.created_at)
+        ).limit(5).all()
+        
+        return render_template('merchant/dashboard.html',
+                             store=store,
+                             stats=stats,
+                             recent_orders=recent_orders,
+                             recent_products=recent_products)
+    except Exception as e:
+        flash('فشل في تحميل لوحة التحكم', 'error')
+        logging.error(f"Merchant dashboard error: {e}")
+        return render_template('merchant/dashboard.html', 
+                             store=None, stats={}, recent_orders=[], recent_products=[])
 
 @merchant_bp.route('/store-profile', methods=['GET', 'POST'])
 @merchant_required
 def store_profile():
     """Store profile management"""
-    merchant = get_current_merchant()
-    
-    if not merchant['store_id']:
-        flash('لا يوجد متجر مرتبط بحسابك', 'error')
-        return redirect(url_for('merchant.dashboard'))
-    
-    if request.method == 'POST':
-        # Update store data
-        store_data = {
-            'name': request.form.get('name'),
-            'description': request.form.get('description'),
-            'address': request.form.get('address'),
-            'phone': request.form.get('phone'),
-            'category': request.form.get('category')
-        }
+    try:
+        merchant = current_user
+        store = Store.query.filter_by(merchant_id=merchant.id).first()
         
-        result = api_client.update_store(merchant['store_id'], store_data)
+        if not store:
+            flash('لا يوجد متجر مرتبط بحسابك', 'error')
+            return redirect(url_for('merchant.dashboard'))
         
-        if 'error' in result:
-            flash(result['error'], 'error')
-        else:
-            flash('تم تحديث بيانات المتجر بنجاح', 'success')
+        if request.method == 'POST':
+            # Update store data
+            store.name = request.form.get('name', store.name)
+            store.description = request.form.get('description', store.description)
+            
+            try:
+                db.session.commit()
+                flash('تم تحديث بيانات المتجر بنجاح', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash('فشل في تحديث بيانات المتجر', 'error')
+                logging.error(f"Store update error: {e}")
+            
+            return redirect(url_for('merchant.store_profile'))
         
-        return redirect(url_for('merchant.store_profile'))
-    
-    # Get store data
-    store_result = api_client.get_store(merchant['store_id'])
-    
-    if 'error' in store_result:
+        return render_template('merchant/store_profile.html', store=store)
+    except Exception as e:
         flash('فشل في تحميل بيانات المتجر', 'error')
-        store_result = {}
-    
-    return render_template('merchant/store_profile.html', store=store_result)
+        logging.error(f"Store profile error: {e}")
+        return redirect(url_for('merchant.dashboard'))
 
 @merchant_bp.route('/products')
 @merchant_required
 def products():
     """Merchant products management"""
-    merchant = get_current_merchant()
-    page = request.args.get('page', 1, type=int)
-    
-    products_data = api_client.get_products(page=page, store_id=merchant['store_id'])
-    
-    if 'error' in products_data:
+    try:
+        merchant = current_user
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        
+        # Get products with pagination
+        products_pagination = Product.query.filter_by(merchant_id=merchant.id).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        products_list = [product.to_dict() for product in products_pagination.items]
+        
+        return render_template('merchant/products.html',
+                             products=products_list,
+                             current_page=page,
+                             total_pages=products_pagination.pages,
+                             total_products=products_pagination.total,
+                             has_prev=products_pagination.has_prev,
+                             has_next=products_pagination.has_next,
+                             prev_num=products_pagination.prev_num,
+                             next_num=products_pagination.next_num)
+    except Exception as e:
         flash('فشل في تحميل المنتجات', 'error')
-        products_data = {'products': [], 'total': 0, 'pages': 0}
-    
-    return render_template('merchant/products.html',
-                         products=products_data.get('products', []),
-                         current_page=page,
-                         total_pages=products_data.get('pages', 0),
-                         total_products=products_data.get('total', 0))
+        logging.error(f"Products page error: {e}")
+        return render_template('merchant/products.html', 
+                             products=[], current_page=1, total_pages=0, total_products=0)
 
 @merchant_bp.route('/products/add', methods=['GET', 'POST'])
 @merchant_required
