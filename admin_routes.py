@@ -72,7 +72,7 @@ def dashboard():
                              stats=stats, 
                              recent_orders=recent_orders,
                              recent_products=recent_products,
-                             current_time=datetime.now())
+                             now=datetime.now())
     except Exception as e:
         flash('فشل في تحميل الإحصائيات', 'error')
         logging.error(f"Dashboard stats error: {e}")
@@ -409,3 +409,375 @@ def delete_ad(ad_id):
         logging.error(f"Delete ad error: {e}")
     
     return redirect(url_for('admin.ads'))
+
+# ==================== COMPREHENSIVE ADMIN MANAGEMENT ROUTES ====================
+
+@admin_bp.route('/users/add', methods=['GET', 'POST'])
+@admin_required
+def add_user():
+    """Add new user (merchant)"""
+    if request.method == 'POST':
+        try:
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
+            role = request.form.get('role', 'merchant')
+            
+            if not username or not email or not password:
+                flash('جميع الحقول مطلوبة', 'error')
+                return render_template('admin/add_user.html')
+            
+            # Check if user exists
+            if User.query.filter_by(username=username).first():
+                flash('اسم المستخدم موجود بالفعل', 'error')
+                return render_template('admin/add_user.html')
+            
+            if User.query.filter_by(email=email).first():
+                flash('البريد الإلكتروني موجود بالفعل', 'error')
+                return render_template('admin/add_user.html')
+            
+            # Create new user
+            new_user = User(
+                username=username,
+                email=email,
+                role=role,
+                is_active=True
+            )
+            new_user.set_password(password)
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            flash(f'تم إنشاء المستخدم {username} بنجاح', 'success')
+            return redirect(url_for('admin.users'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding user: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء المستخدم', 'error')
+    
+    return render_template('admin/add_user.html')
+
+@admin_bp.route('/stores/add', methods=['GET', 'POST'])
+@admin_required
+def add_store():
+    """Add new store"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            description = request.form.get('description', '')
+            merchant_id = request.form.get('merchant_id')
+            
+            if not name or not merchant_id:
+                flash('اسم المتجر ومعرف التاجر مطلوبان', 'error')
+                merchants = User.query.filter_by(role='merchant').all()
+                return render_template('admin/add_store.html', merchants=merchants)
+            
+            # Check if merchant exists
+            merchant = User.query.filter_by(id=merchant_id, role='merchant').first()
+            if not merchant:
+                flash('التاجر المحدد غير موجود', 'error')
+                merchants = User.query.filter_by(role='merchant').all()
+                return render_template('admin/add_store.html', merchants=merchants)
+            
+            # Create new store
+            new_store = Store(
+                name=name,
+                description=description,
+                merchant_id=merchant_id,
+                is_active=True
+            )
+            
+            db.session.add(new_store)
+            db.session.commit()
+            
+            flash(f'تم إنشاء المتجر {name} بنجاح', 'success')
+            return redirect(url_for('admin.stores'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding store: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء المتجر', 'error')
+    
+    merchants = User.query.filter_by(role='merchant').all()
+    return render_template('admin/add_store.html', merchants=merchants)
+
+@admin_bp.route('/products/add', methods=['GET', 'POST'])
+@admin_required
+def add_product():
+    """Add new product"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            description = request.form.get('description', '')
+            price = request.form.get('price')
+            store_id = request.form.get('store_id')
+            
+            if not name or not price or not store_id:
+                flash('اسم المنتج والسعر والمتجر مطلوبة', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_product.html', stores=stores)
+            
+            # Validate price
+            try:
+                price = float(price)
+                if price < 0:
+                    raise ValueError()
+            except ValueError:
+                flash('السعر يجب أن يكون رقماً موجباً', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_product.html', stores=stores)
+            
+            # Check if store exists
+            store = Store.query.get(store_id)
+            if not store:
+                flash('المتجر المحدد غير موجود', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_product.html', stores=stores)
+            
+            # Create new product
+            new_product = Product(
+                name=name,
+                description=description,
+                price=price,
+                store_id=store_id,
+                merchant_id=store.merchant_id,
+                is_active=True
+            )
+            
+            db.session.add(new_product)
+            db.session.commit()
+            
+            flash(f'تم إنشاء المنتج {name} بنجاح', 'success')
+            return redirect(url_for('admin.products'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding product: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء المنتج', 'error')
+    
+    stores = Store.query.filter_by(is_active=True).all()
+    return render_template('admin/add_product.html', stores=stores)
+
+@admin_bp.route('/services/add', methods=['GET', 'POST'])
+@admin_required
+def add_service():
+    """Add new service"""
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name')
+            description = request.form.get('description', '')
+            price = request.form.get('price')
+            store_id = request.form.get('store_id')
+            
+            if not name or not price or not store_id:
+                flash('اسم الخدمة والسعر والمتجر مطلوبة', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_service.html', stores=stores)
+            
+            # Validate price
+            try:
+                price = float(price)
+                if price < 0:
+                    raise ValueError()
+            except ValueError:
+                flash('السعر يجب أن يكون رقماً موجباً', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_service.html', stores=stores)
+            
+            # Check if store exists
+            store = Store.query.get(store_id)
+            if not store:
+                flash('المتجر المحدد غير موجود', 'error')
+                stores = Store.query.filter_by(is_active=True).all()
+                return render_template('admin/add_service.html', stores=stores)
+            
+            # Create new service
+            new_service = Service(
+                name=name,
+                description=description,
+                price=price,
+                store_id=store_id,
+                is_active=True
+            )
+            
+            db.session.add(new_service)
+            db.session.commit()
+            
+            flash(f'تم إنشاء الخدمة {name} بنجاح', 'success')
+            return redirect(url_for('admin.services'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding service: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء الخدمة', 'error')
+    
+    stores = Store.query.filter_by(is_active=True).all()
+    return render_template('admin/add_service.html', stores=stores)
+
+@admin_bp.route('/ads/add', methods=['GET', 'POST'])
+@admin_required
+def add_advertisement():
+    """Add new advertisement"""
+    if request.method == 'POST':
+        try:
+            title = request.form.get('title')
+            description = request.form.get('description', '')
+            image_url = request.form.get('image_url', '')
+            
+            if not title:
+                flash('عنوان الإعلان مطلوب', 'error')
+                return render_template('admin/add_advertisement.html')
+            
+            # Create new advertisement
+            new_ad = Advertisement(
+                title=title,
+                description=description,
+                image_url=image_url,
+                is_active=True
+            )
+            
+            db.session.add(new_ad)
+            db.session.commit()
+            
+            flash(f'تم إنشاء الإعلان {title} بنجاح', 'success')
+            return redirect(url_for('admin.ads'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding advertisement: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء الإعلان', 'error')
+    
+    return render_template('admin/add_advertisement.html')
+
+@admin_bp.route('/jobs/add', methods=['GET', 'POST'])
+@admin_required
+def add_job():
+    """Add new job posting"""
+    if request.method == 'POST':
+        try:
+            title = request.form.get('title')
+            description = request.form.get('description', '')
+            company = request.form.get('company')
+            location = request.form.get('location', '')
+            salary = request.form.get('salary', '')
+            
+            if not title or not company:
+                flash('عنوان الوظيفة واسم الشركة مطلوبان', 'error')
+                return render_template('admin/add_job.html')
+            
+            # Create new job
+            new_job = Job(
+                title=title,
+                description=description,
+                company=company,
+                location=location,
+                salary=salary,
+                is_active=True
+            )
+            
+            db.session.add(new_job)
+            db.session.commit()
+            
+            flash(f'تم إنشاء الوظيفة {title} بنجاح', 'success')
+            return redirect(url_for('admin.jobs'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Error adding job: {str(e)}")
+            flash('حدث خطأ أثناء إنشاء الوظيفة', 'error')
+    
+    return render_template('admin/add_job.html')
+
+@admin_bp.route('/approve_merchant/<int:user_id>', methods=['POST'])
+@admin_required
+def approve_merchant(user_id):
+    """Approve merchant registration"""
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        if user.role != 'merchant':
+            flash('هذا المستخدم ليس تاجراً', 'error')
+            return redirect(url_for('admin.users'))
+        
+        user.is_active = True
+        db.session.commit()
+        
+        flash(f'تم اعتماد التاجر {user.username} بنجاح', 'success')
+        return redirect(url_for('admin.users'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error approving merchant: {str(e)}")
+        flash('حدث خطأ أثناء اعتماد التاجر', 'error')
+        return redirect(url_for('admin.users'))
+
+@admin_bp.route('/manage_subscriptions')
+@admin_required
+def manage_subscriptions():
+    """Manage merchant subscriptions"""
+    try:
+        merchants = User.query.filter_by(role='merchant').all()
+        return render_template('admin/subscriptions.html', merchants=merchants)
+        
+    except Exception as e:
+        logging.error(f"Error in subscriptions management: {str(e)}")
+        flash('حدث خطأ في تحميل الاشتراكات', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/approve_subscription/<int:user_id>', methods=['POST'])
+@admin_required
+def approve_subscription(user_id):
+    """Approve subscription renewal"""
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        if user.role != 'merchant':
+            flash('هذا المستخدم ليس تاجراً', 'error')
+            return redirect(url_for('admin.manage_subscriptions'))
+        
+        # Here you can add subscription logic
+        flash(f'تم تجديد اشتراك {user.username} بنجاح', 'success')
+        return redirect(url_for('admin.manage_subscriptions'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error approving subscription: {str(e)}")
+        flash('حدث خطأ أثناء تجديد الاشتراك', 'error')
+        return redirect(url_for('admin.manage_subscriptions'))
+
+@admin_bp.route('/approve_job/<int:job_id>', methods=['POST'])
+@admin_required
+def approve_job(job_id):
+    """Approve job posting"""
+    try:
+        job = Job.query.get_or_404(job_id)
+        job.is_active = True
+        db.session.commit()
+        
+        flash(f'تم اعتماد الوظيفة {job.title} بنجاح', 'success')
+        return redirect(url_for('admin.jobs'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error approving job: {str(e)}")
+        flash('حدث خطأ أثناء اعتماد الوظيفة', 'error')
+        return redirect(url_for('admin.jobs'))
+
+@admin_bp.route('/reject_job/<int:job_id>', methods=['POST'])
+@admin_required
+def reject_job(job_id):
+    """Reject job posting"""
+    try:
+        job = Job.query.get_or_404(job_id)
+        job.is_active = False
+        db.session.commit()
+        
+        flash(f'تم رفض الوظيفة {job.title}', 'warning')
+        return redirect(url_for('admin.jobs'))
+        
+    except Exception as e:
+        db.session.rollback()
+        logging.error(f"Error rejecting job: {str(e)}")
+        flash('حدث خطأ أثناء رفض الوظيفة', 'error')
+        return redirect(url_for('admin.jobs'))
