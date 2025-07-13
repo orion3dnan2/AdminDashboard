@@ -20,50 +20,42 @@
     <!-- Statistics Cards -->
     <div class="row g-4 mb-4">
         <div class="col-md-3">
-            <div class="card stat-card heritage-card text-white border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="stat-icon mx-auto">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h6 class="card-title mb-2 text-sudan-black">إجمالي المستخدمين</h6>
-                    <h2 class="mb-0 fw-bold text-sudan-green">{{ stats.get('total_users', 0) }}</h2>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
                 </div>
+                <div class="stat-number">{{ stats.get('total_users', 0) }}</div>
+                <div class="stat-label">إجمالي المستخدمين</div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card stat-card heritage-card text-white border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="stat-icon mx-auto">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <h6 class="card-title mb-2 text-sudan-black">إجمالي المتاجر</h6>
-                    <h2 class="mb-0 fw-bold text-sudan-green">{{ stats.get('total_stores', 0) }}</h2>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-store"></i>
                 </div>
+                <div class="stat-number">{{ stats.get('total_stores', 0) }}</div>
+                <div class="stat-label">إجمالي المتاجر</div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card stat-card heritage-card text-white border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="stat-icon mx-auto">
-                        <i class="fas fa-box"></i>
-                    </div>
-                    <h6 class="card-title mb-2 text-sudan-black">إجمالي المنتجات</h6>
-                    <h2 class="mb-0 fw-bold text-sudan-green">{{ stats.get('total_products', 0) }}</h2>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-box"></i>
                 </div>
+                <div class="stat-number">{{ stats.get('total_products', 0) }}</div>
+                <div class="stat-label">إجمالي المنتجات</div>
             </div>
         </div>
 
         <div class="col-md-3">
-            <div class="card stat-card heritage-card text-white border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="stat-icon mx-auto">
-                        <i class="fas fa-cogs"></i>
-                    </div>
-                    <h6 class="card-title mb-2 text-sudan-black">إجمالي الخدمات</h6>
-                    <h2 class="mb-0 fw-bold text-sudan-green">{{ stats.get('total_services', 0) }}</h2>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-cogs"></i>
                 </div>
+                <div class="stat-number">{{ stats.get('total_services', 0) }}</div>
+                <div class="stat-label">إجمالي الخدمات</div>
             </div>
         </div>
     </div>
