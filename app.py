@@ -3,6 +3,7 @@ import logging
 from flask import Flask, redirect, url_for
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_login import LoginManager
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -38,6 +39,12 @@ login_manager.login_message_category = 'error'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# Add template context processors
+@app.context_processor
+def inject_now():
+    """Inject current date for templates"""
+    return {'now': datetime.now()}
 
 # Create database tables and initialize default data
 with app.app_context():
