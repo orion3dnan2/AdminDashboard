@@ -40,18 +40,18 @@ login_manager.login_message_category = 'error'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Add template context processors
-@app.context_processor
-def inject_now():
-    """Inject current date for templates"""
-    return {'now': datetime.now()}
-
 # Create database tables and initialize default data
 with app.app_context():
     db.create_all()
     # Initialize default admin user
     from auth import init_default_admin
     init_default_admin()
+
+# Add template context processors
+@app.context_processor
+def inject_now():
+    """Inject current date for templates"""
+    return {'now': datetime.now()}
 
 # Import and register blueprints
 from admin_routes import admin_bp

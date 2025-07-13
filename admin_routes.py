@@ -74,7 +74,10 @@ def dashboard():
     except Exception as e:
         flash('فشل في تحميل الإحصائيات', 'error')
         logging.error(f"Dashboard stats error: {e}")
-        return render_template('admin/dashboard.html', stats={}, recent_orders=[], recent_products=[])
+        return render_template('admin/dashboard.html', 
+                             stats={'total_users': 0, 'total_stores': 0, 'total_products': 0, 'total_orders': 0, 'pending_orders': 0}, 
+                             recent_orders=[], 
+                             recent_products=[])
 
 @admin_bp.route('/users')
 @admin_required
