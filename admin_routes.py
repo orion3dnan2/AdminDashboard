@@ -4,6 +4,7 @@ from models import db, User, Store, Product, Service, Order, Advertisement, Job
 from auth import admin_required, is_admin_logged_in, authenticate_user
 from sqlalchemy import func, desc
 import logging
+from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -70,7 +71,8 @@ def dashboard():
         return render_template('admin/dashboard.html', 
                              stats=stats, 
                              recent_orders=recent_orders,
-                             recent_products=recent_products)
+                             recent_products=recent_products,
+                             current_time=datetime.now())
     except Exception as e:
         flash('فشل في تحميل الإحصائيات', 'error')
         logging.error(f"Dashboard stats error: {e}")

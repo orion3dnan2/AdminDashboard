@@ -113,24 +113,18 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <small class="text-muted">المستخدمين النشطين</small>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: {{ ((stats.get('active_users', 0) / stats.get('total_users', 1)) * 100) | round }}%"></div>
-                        </div>
-                        <small class="text-muted">{{ stats.get('active_users', 0) }} من {{ stats.get('total_users', 0) }}</small>
+                        <small class="text-muted">إجمالي المستخدمين</small>
+                        <h4 class="text-success">{{ stats.get('total_users', 0) }}</h4>
                     </div>
 
                     <div class="mb-3">
-                        <small class="text-muted">المتاجر النشطة</small>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-primary" style="width: {{ ((stats.get('active_stores', 0) / stats.get('total_stores', 1)) * 100) | round }}%"></div>
-                        </div>
-                        <small class="text-muted">{{ stats.get('active_stores', 0) }} من {{ stats.get('total_stores', 0) }}</small>
+                        <small class="text-muted">إجمالي المتاجر</small>
+                        <h4 class="text-primary">{{ stats.get('total_stores', 0) }}</h4>
                     </div>
 
                     <div class="alert alert-info border-0 small">
                         <i class="fas fa-info-circle me-1"></i>
-                        آخر تحديث: {{ moment().format('HH:mm') }}
+                        آخر تحديث: {{ current_time.strftime('%H:%M') if current_time else '00:00' }}
                     </div>
                 </div>
             </div>
